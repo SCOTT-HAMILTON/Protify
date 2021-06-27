@@ -18,7 +18,7 @@
 Protify lets you choose long-running processes on your computer and it will watch them for you. And you'll receive a notification on you android mobile phone each time one of them has terminated.
 
 ## How does it work
-To work with your android phone, use the Protifydroid app : [https://github.com/SCOTT-HAMILTON/Protifydroi://github.com/SCOTT-HAMILTON/Protifydroid](https://github.com/SCOTT-HAMILTON/Protifydroid). Protify will only work if both your mobile and your computer are connected to the same local network such has your home's wifi. It uses mDNS under the hood.
+To work with your android phone, use the [Protifydroid app](https://github.com/SCOTT-HAMILTON/Protifydroid). Protify will only work if both your mobile and your computer are connected to the same local network such has your home's wifi. It uses mDNS under the hood.
 
 ## Building
 Protify is configured with qmake, simply open it in QtCreator or run qmake manually
