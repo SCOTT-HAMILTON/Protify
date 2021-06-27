@@ -1,6 +1,6 @@
 [submodule "libproc"]
 	path = libproc
-	url = https://github.com/reyreaud-l/libproc
+	url = https://github.com/SCOTT-HAMILTON/libproc
 
 [submodule "qt-qml-models"]
 	path = qt-qml-models
