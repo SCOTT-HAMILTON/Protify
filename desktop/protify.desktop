@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Protify
+Exec=Protify
+Icon=Protify
+Type=Application
+Categories=Utility;Accessibility;Office;Network;
+GenericName=Lets your computer run and notifies you on your mobile phone
+GenericName[fr_FR]=Laisse votre ordinateur tourner et vous notifie sur votre téléphone
+Terminal=false

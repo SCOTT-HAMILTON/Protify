@@ -4,6 +4,6 @@
         <file>icons/right-chevron.svg</file>
         <file>icons/delete-icon.svg</file>
         <file>icons/sync.svg</file>
-        <file>icons/finished.svg</file>
+        <file>icons/scalable/Protify.svg</file>
     </qresource>
 </RCC>

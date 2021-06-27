@@ -12,6 +12,11 @@ SOURCES += \
         followedprocessitem.cpp \
         main.cpp \
         processitem.cpp
+HEADERS += \
+    backend.h \
+    communicationmanager.h \
+    followedprocessitem.h \
+    processitem.h
 
 RESOURCES += qml.qrc \
     icons.qrc
@@ -34,12 +39,17 @@ QML_IMPORT_PATH =
 QML_DESIGNER_IMPORT_PATH =
 
 # Default rules for deployment.
+target = Protify
 qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = $${QT_INSTALL_PREFIX}/bin
-!isEmpty(target.path): INSTALLS += target
+else: unix:!android: {
+	target.path = $${QT_INSTALL_PREFIX}/bin
 
-HEADERS += \
-    backend.h \
-    communicationmanager.h \
-    followedprocessitem.h \
-    processitem.h
+	iconscalable.path = $${QT_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps
+	iconscalable.files = icons/scalable/Protify.svg
+
+	desktop.path = $${QT_INSTALL_PREFIX}/share/applications
+	desktop.files = desktop/protify.desktop
+
+	INSTALLS += iconscalable desktop
+}
+!isEmpty(target.path): INSTALLS += target

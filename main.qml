@@ -207,7 +207,7 @@ Window {
                     }
                     Image {
                         id: finishedImage
-                        source: "qrc:/icons/finished.svg"
+                        source: "qrc:/icons/scalable/Protify.svg"
                         sourceSize.height: parent.height*0.5
                         sourceSize.width: parent.height*0.5
                         x: parent.width
