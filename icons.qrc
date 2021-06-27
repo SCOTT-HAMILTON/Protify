@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/open_drawer_icon.svg</file>
+        <file>icons/right-chevron.svg</file>
+        <file>icons/delete-icon.svg</file>
+        <file>icons/sync.svg</file>
+        <file>icons/finished.svg</file>
+    </qresource>
+</RCC>

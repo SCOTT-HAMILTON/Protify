@@ -1,0 +1,11 @@
+[submodule "libproc"]
+	path = libproc
+	url = https://github.com/reyreaud-l/libproc
+
+[submodule "qt-qml-models"]
+	path = qt-qml-models
+	url = http://gitlab.unique-conception.org/qt-qml-tricks/qt-qml-models
+
+[submodule "QtZeroConf"]
+	path = QtZeroConf
+	url = https://github.com/jbagg/QtZeroConf
