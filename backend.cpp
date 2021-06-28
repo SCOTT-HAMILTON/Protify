@@ -1,6 +1,6 @@
 #include "backend.h"
+#include "processlister.h"
 
-#include <plib.hh>
 #include <algorithm>
 #include <iostream>
 #include <QList>
@@ -70,11 +70,11 @@ void Backend::updateSearchResults(const QString& search)
 {
     m_lastSearch = search;
     m_searchResults.clear();
-    auto processes = plib::get_all_processes();
+    auto processes = ProcessLister::getRunningProcesses();
     for (const auto& it : processes) {
-        auto name = QString::fromStdString(it.name_get());
+        const auto& name = it.name;
         if (name.toUpper().contains(search.toUpper())) {
-            auto item_pid = it.stat_get().pid;
+            auto item_pid = it.pid;
             bool alreadyFollowed = false;
             for (const auto& it : m_followedItems) {
                 if (it->pid() == item_pid) {

@@ -1,6 +1,6 @@
 #include "followedprocessitem.h"
+#include "processlister.h"
 
-#include <plib.hh>
 #include <QDebug>
 
 FollowedProcessItem::FollowedProcessItem(
@@ -38,10 +38,10 @@ void FollowedProcessItem::setRunning(bool running)
 void FollowedProcessItem::initWatcher() {
     watcher->setInterval(1000);
     QObject::connect(watcher, &QTimer::timeout,[this](){
-        auto processes = plib::get_all_processes();
+		auto processes = ProcessLister::getRunningProcesses();
         auto res = std::find_if(processes.begin(), processes.end(),
-                                [this](const plib::Process p){
-            return p.stat_get().pid == m_pid;
+                                [this](const ProcessLister::Process& p){
+            return p.pid == m_pid;
         });
         if (res == processes.end()) {
             emit processDied(m_pid);

@@ -11,12 +11,15 @@ SOURCES += \
         communicationmanager.cpp \
         followedprocessitem.cpp \
         main.cpp \
-        processitem.cpp
+        processitem.cpp \
+		processlister.cpp
+
 HEADERS += \
     backend.h \
     communicationmanager.h \
     followedprocessitem.h \
-    processitem.h
+    processitem.h \
+	processlister.h
 
 RESOURCES += qml.qrc \
     icons.qrc
@@ -28,7 +31,8 @@ QM_FILES_RESOURCE_PREFIX = /translations
 
 include(QtZeroConf/qtzeroconf.pri)
 include(qt-qml-models/QtQmlModels.pri)
-include(libproc.pri)
+win32: include(libxprocs.pri)
+unix:!android: include(libproc.pri)
 
 DEFINES += QZEROCONF_STATIC
 
