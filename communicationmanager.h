@@ -4,7 +4,7 @@
 #include <QObject>
 #include <atomic>
 #include <QTcpSocket>
-#include "qzeroconf.h"
+#include "QtZeroConf/qzeroconf.h"
 
 class CommunicationManager : public QObject
 {

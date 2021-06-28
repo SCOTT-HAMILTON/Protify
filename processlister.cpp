@@ -14,10 +14,10 @@ std::vector<ProcessLister::Process> ProcessLister::getRunningProcesses() {
 	result.reserve(processes.size());
 	std::transform(processes.begin(), processes.end(),
 			std::back_inserter(result),
-			[](const libopen::PROCESS& p){
+            [](const libopen::PROCESS p){
 				ProcessLister::Process process = {
 					QString::fromStdString(p.exeName),
-					p.Id
+                    static_cast<int>(p.Id)
 				};
 				return process;
 	});

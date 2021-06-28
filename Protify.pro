@@ -34,6 +34,8 @@ include(qt-qml-models/QtQmlModels.pri)
 win32: include(libxprocs.pri)
 unix:!android: include(libproc.pri)
 
+win32: LIBS +=  -lWindowsApp
+
 DEFINES += QZEROCONF_STATIC
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
