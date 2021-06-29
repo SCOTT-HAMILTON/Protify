@@ -116,7 +116,12 @@ void CommunicationManager::connectToService(const QZeroConfService s) {
 	isTryingToConnect.store(true);
 	auto server_port = QString(s->txt()[SERVER_PORT]).toInt(nullptr, 10);
 	server_socket = new QTcpSocket(this);
+#if QT_VERSION >= 0x051500 // errorOccured was introduced in Qt 5.15
 	QObject::connect(server_socket, &QTcpSocket::errorOccurred,
+#else
+	QObject::connect(server_socket,
+		QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),
+#endif
 			[this]() {
 		isTryingToConnect.store(false);
 		qDebug() << "[error] server_socket error : " << server_socket->errorString();
