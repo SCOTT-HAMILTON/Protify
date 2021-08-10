@@ -2,7 +2,7 @@
 #define BACKEND_H
 
 #include <QObject>
-#include <QQmlObjectListModel.h>
+#include "qt-qml-models/QQmlObjectListModel.h"
 
 #include "processitem.h"
 #include "followedprocessitem.h"

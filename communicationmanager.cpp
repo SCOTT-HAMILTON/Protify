@@ -4,25 +4,27 @@
 #include <QJsonDocument>
 #include <QDataStream>
 #include <QSettings>
+#include <QJsonObject>
 
 CommunicationManager::CommunicationManager(
         QObject *parent) :
     QObject(parent),
-    connectionInitialized(false),
-    server_socket(nullptr)
+    m_uuid(QUuid::createUuid()),
+    m_processus()
 {
-    QSettings settings;
-    m_name = settings.value("hostname", "MY-PC").toString();
+    m_name = QSettings().value("hostname", "MY-PC").toString();
+}
+
+CommunicationManager::~CommunicationManager()
+{
+    running.store(false);
+    if (server_thread) {
+        server_thread->join();
+    }
 }
 
 void CommunicationManager::initializeConnection()
 {
-    if (connectionInitialized) {
-        qDebug() << "[log] connection already initialized";
-        return;
-    }
-    isConnected.store(false);
-
     auto zeroConf = new QZeroConf(this);
     QObject::connect(zeroConf, &QZeroConf::servicePublished, [](){qDebug() << "Service published !";});
     QObject::connect(zeroConf, &QZeroConf::error, [](QZeroConf::error_t e){
@@ -72,36 +74,23 @@ void CommunicationManager::initializeConnection()
                  << "host: " << s->host()
                  << "ip: " << s->ip().toString()
                  << "port: " << s->port();
-		connectToService(s);
+//        connectToService(s);
     });
     zeroConf->startBrowser("_examplednssd._tcp");
-    connectionInitialized = true;
+//    connectToService("192.168.1.19", 7777);
     qDebug() << "Started Browsing...";
 }
 void CommunicationManager::sendProcessDied(const QString& name) {
-	if (server_socket && isConnected.load()) {
-		server_socket->write("_\n");
-        server_socket->write(QString("notif="+tr("Process %1 finished.\n")).arg(name)
-                             .toStdString().c_str());
-	}
-}
-void CommunicationManager::sendProcessus(const QStringList &processus)
-{
-	if (server_socket && isConnected.load()) {
-		qDebug() << "[log] Sending Processus";
-		auto jsonArray = QJsonArray::fromStringList(processus);
-		QJsonDocument jsonDoc(jsonArray);
-		server_socket->write("_\n");
-		server_socket->write("processus="+jsonDoc.toJson(QJsonDocument::Compact)+"\n");
-	}
+//    if (server_socket && isConnected.load()) {
+//        server_socket->write("_\n");
+//        server_socket->write(QString("notif="+tr("Process %1 finished.\n")).arg(name)
+//                             .toStdString().c_str());
+    //    }
 }
 
-void CommunicationManager::sendName()
+void CommunicationManager::updateProcessus(const QStringList &processus)
 {
-	if (server_socket && isConnected.load()) {
-		server_socket->write("_\n");
-		server_socket->write(QString("name="+m_name).toUtf8()+"\n");
-    }
+   m_processus = processus;
 }
 
 void CommunicationManager::changeName(const QString &newName)
@@ -110,43 +99,55 @@ void CommunicationManager::changeName(const QString &newName)
 }
 
 void CommunicationManager::connectToService(const QZeroConfService s) {
-	if (isConnected.load() || isTryingToConnect.load()) {
-		return;
-	}
-	isTryingToConnect.store(true);
-	auto server_port = QString(s->txt()[SERVER_PORT]).toInt(nullptr, 10);
-	server_socket = new QTcpSocket(this);
-#if QT_VERSION >= 0x051500 // errorOccured was introduced in Qt 5.15
-	QObject::connect(server_socket, &QTcpSocket::errorOccurred,
-#else
-	QObject::connect(server_socket,
-		QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),
-#endif
-			[this]() {
-		isTryingToConnect.store(false);
-		qDebug() << "[error] server_socket error : " << server_socket->errorString();
-	});
-	QObject::connect(server_socket, &QTcpSocket::connected,
-			[this]() {
-		qDebug() << "\n\n\t[log] NEW CONNECTION\n";
-		isTryingToConnect.store(false);
-		isConnected.store(true);
-		sendName();
-		emit newConnectedClient();
-		qDebug() << "[log] server : connected, wrote message";
-	});
-	QObject::connect(server_socket, &QIODevice::readyRead, [this]() {
-		QByteArray b;
-		QDataStream in(server_socket);
-		in >> b;
-		qDebug() << "[log] server : received new message : " << QString::fromUtf8(b);
-	});
-	QObject::connect(server_socket, &QTcpSocket::disconnected, [this]() {
-		qDebug() << "[log] server : client "
-				 << server_socket->peerAddress().toString() << "disconnected.";
-	});
-	qDebug() << "[log] Trying to connect to host on port" << server_port;
-	server_socket->connectToHost(s->ip(), server_port);
+    qDebug() << "Connecting to Service";
+    auto server_port = QString(s->txt()[SERVER_PORT_ZERO_CONF_KEY]).toInt(nullptr, 10);
+    connectToService(s->ip().toString(), server_port);
 }
 
+void CommunicationManager::connectToService(const QString &address, int server_port)
+{
+    qDebug() << "Connecting to Service";
+    if (!server_thread) {
+        ConnectionArgs args = {address, server_port};
+        server_thread = std::make_unique<std::thread>(&CommunicationManager::server_loop, this, args);
+    } else {
+        qDebug() << "Server is already running!";
+    }
+}
+
+void CommunicationManager::server_loop(const ConnectionArgs& args) {
+    zmq::context_t ctx;
+    zmq::socket_t publisher(ctx, zmq::socket_type::pub);
+    auto server_address = "tcp://"+args.address+":"+QString::number(args.port);
+    qDebug() << "Connecting to server: " << server_address;
+    publisher.connect(server_address.toStdString());
+    running.store(true);
+    while(running.load()) {
+//        std::array<zmq::mutable_buffer, 2> send_msgs = {
+//            zmq::buffer(uuid.data(), uuid.size()),
+//            zmq::buffer(reply.data(), reply.size())
+//        };
+//        qDebug() << "Sending answer...";
+//        if (!zmq::send_multipart(publisher, send_msgs)) {
+//            qDebug() << "[error] Failed to reply multipart message";
+//        }
+//        qDebug() << "[log] Sending Processus";
+//        auto jsonArray = QJsonArray::fromStringList(processus);
+//        server_socket->write("_\n");
+//        server_socket->write("processus="+jsonDoc.toJson(QJsonDocument::Compact)+"\n");
+        QJsonObject object({
+            QPair("alive", QJsonValue(true)),
+            QPair("name", QJsonValue(m_name)),
+            QPair("processus", QJsonValue(QJsonArray::fromStringList(m_processus))),
+            QPair("uuid", QJsonValue(m_uuid.toString(QUuid::StringFormat::WithoutBraces)))
+        });
+        qDebug() << "Sending processus: " << m_processus;
+        QJsonDocument jsonDoc(object);
+        QString jsonMessage = jsonDoc.toJson(QJsonDocument::Compact);
+        publisher.send(jsonMessage.toStdString().c_str(), jsonMessage.size());
+        zmq_sleep(5);
+    }
+    publisher.close();
+    ctx.close();
+}
 

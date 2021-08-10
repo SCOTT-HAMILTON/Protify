@@ -3,34 +3,45 @@
 
 #include <QObject>
 #include <atomic>
+#include <QUuid>
+#include <memory>
 #include <QTcpSocket>
+#include <zmq_addon.hpp>
 #include "QtZeroConf/qzeroconf.h"
+#include <thread>
+
+struct ConnectionArgs {
+    const QString address;
+    int port;
+};
 
 class CommunicationManager : public QObject
 {
     Q_OBJECT
 public:
     explicit CommunicationManager(QObject *parent);
-    constexpr static const char* SERVER_PORT = "SERVER_PORT";
+    ~CommunicationManager();
+    constexpr static const char* SERVER_PORT_ZERO_CONF_KEY = "SRV_PORT";
     void initializeConnection();
 
 signals:
-	void newConnectedClient();
+    void newConnectedClient();
 
 public slots:
     void sendProcessDied(const QString& name);
-    void sendProcessus(const QStringList& processus);
-    void sendName();
+    void updateProcessus(const QStringList& processus);
     void changeName(const QString& newName);
 
 private:
-    std::atomic_bool isConnected;
-    std::atomic_bool isTryingToConnect;
-    bool connectionInitialized;
-    QTcpSocket* server_socket;
+    std::unique_ptr<std::thread> server_thread;
+    QStringList m_processus;
+    std::atomic_bool running;
     QString m_name;
+    QUuid m_uuid;
 
-	void connectToService(const QZeroConfService s);
+    void connectToService(const QZeroConfService s);
+    void connectToService(const QString& address, int port);
+    void server_loop(const ConnectionArgs& args);
 };
 
 #endif // COMMUNICATIONMANAGER_H

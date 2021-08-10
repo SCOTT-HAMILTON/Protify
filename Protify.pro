@@ -7,25 +7,27 @@ CONFIG += c++17 lrelease embed_translations
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        backend.cpp \
-        communicationmanager.cpp \
-        followedprocessitem.cpp \
-        main.cpp \
-        processitem.cpp \
+		backend.cpp \
+		communicationmanager.cpp \
+		followedprocessitem.cpp \
+		main.cpp \
+		processitem.cpp \
 		processlister.cpp
 
 HEADERS += \
-    backend.h \
-    communicationmanager.h \
-    followedprocessitem.h \
-    processitem.h \
+	backend.h \
+	communicationmanager.h \
+	followedprocessitem.h \
+	processitem.h \
 	processlister.h
 
+LIBS +=	-lzmq
+
 RESOURCES += qml.qrc \
-    icons.qrc
+	icons.qrc
 
 TRANSLATIONS += \
-    translations/Protify_fr_FR.ts
+	translations/Protify_fr_FR.ts
 QM_FILES_RESOURCE_PREFIX = /translations
 
 

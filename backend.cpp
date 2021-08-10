@@ -15,10 +15,10 @@ Backend::Backend(QObject *parent) :
     setHostname(settings.value("hostname", "MY-PC").toString());
 
     updateSearchResults("");
-	QObject::connect(this, &Backend::followedItemsChanged,
-					 this, &Backend::sendProcessus);
-	QObject::connect(communicationManager, &CommunicationManager::newConnectedClient,
-					 this, &Backend::sendProcessus);
+    QObject::connect(this, &Backend::followedItemsChanged,
+                     this, &Backend::sendProcessus);
+    QObject::connect(communicationManager, &CommunicationManager::newConnectedClient,
+                     this, &Backend::sendProcessus);
     QObject::connect(this, &Backend::hostnameChanged,
                      communicationManager, &CommunicationManager::changeName);
 }
@@ -162,17 +162,17 @@ void Backend::onProcessDied(int pid)
         });
         if (item != m_followedItems.end()) {
             (*item)->setRunning(false);
-			qDebug() << "Sending processDied";
-			communicationManager->sendProcessDied((*item)->name());
+            qDebug() << "Sending processDied";
+            communicationManager->sendProcessDied((*item)->name());
         }
     }
 }
 void Backend::sendProcessus() {
-	qDebug() << "Sending processus";
-	QList<QString> processus;
-	processus.reserve(m_followedItems.size());
-	std::transform(m_followedItems.begin(), m_followedItems.end(),
-			std::back_inserter(processus),
-				   [](const ProcessItem* it) -> QString { return it->name(); });
-	communicationManager->sendProcessus(QStringList(processus));
+    qDebug() << "Sending processus";
+    QList<QString> processus;
+    processus.reserve(m_followedItems.size());
+    std::transform(m_followedItems.begin(), m_followedItems.end(),
+            std::back_inserter(processus),
+                   [](const ProcessItem* it) -> QString { return it->name(); });
+    communicationManager->updateProcessus(QStringList(processus));
 }
