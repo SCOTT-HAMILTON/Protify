@@ -1,4 +1,7 @@
 { pkgs ? import <nixpkgs> {} }:
+let
+  libcds = pkgs.callPackage ./libcds.nix { };
+in
 with pkgs; mkShell {
   buildInputs = [
     qtcreator
@@ -6,6 +9,7 @@ with pkgs; mkShell {
     zeromq
     qt5.full
     avahi
+    libcds
   ];
   shellHook = ''
     qtcreator Protify.pro

@@ -81,11 +81,11 @@ void CommunicationManager::initializeConnection()
     qDebug() << "Started Browsing...";
 }
 void CommunicationManager::sendProcessDied(const QString& name) {
-//    if (server_socket && isConnected.load()) {
-//        server_socket->write("_\n");
-//        server_socket->write(QString("notif="+tr("Process %1 finished.\n")).arg(name)
-//                             .toStdString().c_str());
-    //    }
+    sendDiedProcessNotifStackMutex.lock();
+    qDebug() << "Process Stack size before: " << sendDiedProcessNotifStack.size();
+    sendDiedProcessNotifStack.push(name);
+    qDebug() << "Process Stack size after: " << sendDiedProcessNotifStack.size();
+    sendDiedProcessNotifStackMutex.unlock();
 }
 
 void CommunicationManager::updateProcessus(const QStringList &processus)
@@ -123,18 +123,15 @@ void CommunicationManager::server_loop(const ConnectionArgs& args) {
     publisher.connect(server_address.toStdString());
     running.store(true);
     while(running.load()) {
-//        std::array<zmq::mutable_buffer, 2> send_msgs = {
-//            zmq::buffer(uuid.data(), uuid.size()),
-//            zmq::buffer(reply.data(), reply.size())
-//        };
-//        qDebug() << "Sending answer...";
-//        if (!zmq::send_multipart(publisher, send_msgs)) {
-//            qDebug() << "[error] Failed to reply multipart message";
-//        }
-//        qDebug() << "[log] Sending Processus";
-//        auto jsonArray = QJsonArray::fromStringList(processus);
-//        server_socket->write("_\n");
-//        server_socket->write("processus="+jsonDoc.toJson(QJsonDocument::Compact)+"\n");
+        qDebug() << "Process Stack size: " << sendDiedProcessNotifStack.size();
+        while (sendDiedProcessNotifStack.size() > 0) {
+            sendDiedProcessNotifStackMutex.lock();
+            auto process = sendDiedProcessNotifStack.pop();
+            sendDiedProcessNotifStackMutex.unlock();
+            QString message("notifdied="+process);
+            qDebug() << "Publisher sent message: " << message;
+            publisher.send(message.toStdString().c_str(), message.size());
+        }
         QJsonObject object({
             QPair("alive", QJsonValue(true)),
             QPair("name", QJsonValue(m_name)),
@@ -145,7 +142,7 @@ void CommunicationManager::server_loop(const ConnectionArgs& args) {
         QJsonDocument jsonDoc(object);
         QString jsonMessage = jsonDoc.toJson(QJsonDocument::Compact);
         publisher.send(jsonMessage.toStdString().c_str(), jsonMessage.size());
-        zmq_sleep(5);
+        zmq_sleep(2);
     }
     publisher.close();
     ctx.close();

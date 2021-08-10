@@ -9,6 +9,8 @@
 #include <zmq_addon.hpp>
 #include "QtZeroConf/qzeroconf.h"
 #include <thread>
+#include <QStack>
+//#include <cds/container/treiber_stack.h>
 
 struct ConnectionArgs {
     const QString address;
@@ -38,6 +40,10 @@ private:
     std::atomic_bool running;
     QString m_name;
     QUuid m_uuid;
+
+//    cds::container::TreiberStack<cds::gc::HP, QString> sendDiedProcessNotifStack;
+    QMutex sendDiedProcessNotifStackMutex;
+    QStack<QString> sendDiedProcessNotifStack;
 
     void connectToService(const QZeroConfService s);
     void connectToService(const QString& address, int port);

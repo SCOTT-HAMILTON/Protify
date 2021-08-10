@@ -38,14 +38,14 @@ void FollowedProcessItem::setRunning(bool running)
 void FollowedProcessItem::initWatcher() {
     watcher->setInterval(1000);
     QObject::connect(watcher, &QTimer::timeout,[this](){
-		auto processes = ProcessLister::getRunningProcesses();
+        auto processes = ProcessLister::getRunningProcesses();
         auto res = std::find_if(processes.begin(), processes.end(),
                                 [this](const ProcessLister::Process& p){
             return p.pid == m_pid;
         });
         if (res == processes.end()) {
             emit processDied(m_pid);
-			watcher->stop();
+            watcher->stop();
         }
     });
     watcher->start();
