@@ -1,9 +1,9 @@
-import QtQml 2.15
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Controls.Material 2.15
-import QtQuick.Layouts 1.15
-import QtQuick.Window 2.15
+import QtQml 2.12
+import QtQuick 2.12
+import QtQuick.Controls 2.12
+import QtQuick.Controls.Material 2.12
+import QtQuick.Layouts 1.12
+import QtQuick.Window 2.12
 
 Window {
     id: root
@@ -94,14 +94,11 @@ Window {
             id: followedItems
             width: parent.width
             property var calculatedHeight: parent.height-drawerToolBarHeader.height
-                    -hostnameField.height
-                    -parent.height*0.1
+                    -60-parent.height*0.1
+			height: calculatedHeight	
             anchors.top: drawerToolBarHeader.bottom
             model: backend.followedItems
             clip: true
-            Component.onCompleted: {
-                height = calculatedHeight
-            }
             delegate: Row {
                 id: followedItemLayout
                 states: [
@@ -243,14 +240,15 @@ Window {
             ]
         }
         StackLayout {
-            currentIndex: configTabBar.currentIndex
-            Rectangle {
-                y: configTabBar.y+configTabBar.height
-                width: configTabBar.width
+			anchors.top: configTabBar.bottom
+			currentIndex: configTabBar.currentIndex
+            Item {
+				width: configTabBar.width
+				height: 60
                 TextField {
                     id: hostnameField
                     width: sideDrawer.width*0.8
-                    height: 60
+					anchors.top: parent.top
                     x: sideDrawer.width/2-width/2
                     placeholderText: qsTr("Hostname")
                     Component.onCompleted: {
@@ -261,8 +259,7 @@ Window {
                     }
                 }
             }
-            Rectangle {
-                y: configTabBar.y+configTabBar.height
+            Item {
                 width: configTabBar.width
                 ColumnLayout {
                     anchors.fill: parent

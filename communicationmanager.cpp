@@ -94,7 +94,15 @@ void CommunicationManager::sendProcessDied(const QString& name) {
     QUrl url(gotifyAddress);
     url.setPort(gotifyPort);
     url.setPath("/message");
+#if QT_VERSION < QT_VERSION_CHECK(5, 13, 0)
+    {
+        QUrlQuery query;
+		query.addQueryItem(QString("token"), token);
+		url.setQuery(query);
+    }
+#else
     url.setQuery(QUrlQuery({QPair(QString("token"), token)}));
+#endif
     qDebug() << "[log] query url: " << url.toString();
     auto manager = new QNetworkAccessManager(this);
     auto request = new QHttpMultiPart(QHttpMultiPart::FormDataType, manager);
@@ -117,9 +125,15 @@ void CommunicationManager::sendProcessDied(const QString& name) {
         request->append(priority);
     }
     auto answer = manager->post(QNetworkRequest(url), request);
-    QObject::connect(answer, &QNetworkReply::errorOccurred, this, [](QNetworkReply::NetworkError e){
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+    QObject::connect(answer, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), [](QNetworkReply::NetworkError e){
         qDebug() << "[error] network error occured: " << e;
     });
+#else
+    QObject::connect(answer, &QNetworkReply::errorOccurred, [](QNetworkReply::NetworkError e){
+        qDebug() << "[error] network error occured: " << e;
+    });
+#endif
     qDebug() << "[log] sent post request.";
 }
 
@@ -159,10 +173,12 @@ void CommunicationManager::server_loop(const ConnectionArgs& args) {
     running.store(true);
     while(running.load()) {
         QJsonObject object({
-            QPair("alive", QJsonValue(true)),
-            QPair("name", QJsonValue(m_name)),
-            QPair("processus", QJsonValue(QJsonArray::fromStringList(m_processus))),
-            QPair("uuid", QJsonValue(m_uuid.toString(QUuid::StringFormat::WithoutBraces)))
+            QPair<QString,QJsonValue>("alive", QJsonValue(true)),
+            QPair<QString,QJsonValue>("name", QJsonValue(m_name)),
+            QPair<QString,QJsonValue>("processus",
+					QJsonValue(QJsonArray::fromStringList(m_processus))),
+            QPair<QString,QJsonValue>("uuid",
+					QJsonValue(m_uuid.toString(QUuid::StringFormat::WithoutBraces)))
         });
         qDebug() << "Sending processus: " << m_processus;
         QJsonDocument jsonDoc(object);
