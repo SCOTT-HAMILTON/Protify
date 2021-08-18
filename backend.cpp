@@ -13,6 +13,9 @@ Backend::Backend(QObject *parent) :
 {
     QSettings settings;
     setHostname(settings.value("hostname", "MY-PC").toString());
+    setToken(settings.value("token", "").toString());
+    setGotifyAddress(settings.value("gotify_address", "").toString());
+    setGotifyPort(settings.value("gotify_port", 80).toInt());
 
     updateSearchResults("");
     QObject::connect(this, &Backend::followedItemsChanged,
@@ -53,12 +56,53 @@ QString Backend::hostname() const
     return m_hostname;
 }
 
+QString Backend::token() const
+{
+    return m_token;
+}
+
+QString Backend::gotifyAddress() const
+{
+    return m_gotifyAddress;
+}
+
+int Backend::gotifyPort() const
+{
+    return m_gotifyPort;
+}
+
 void Backend::setHostname(const QString &hostname)
 {
     m_hostname = hostname;
     QSettings settings;
     settings.setValue("hostname", hostname);
     emit hostnameChanged(m_hostname);
+}
+
+void Backend::setToken(const QString &token)
+{
+    m_token = token;
+    QSettings settings;
+    settings.setValue("token", token);
+    emit tokenChanged(m_token);
+}
+
+void Backend::setGotifyAddress(const QString &address)
+{
+    m_gotifyAddress = address;
+    QSettings settings;
+    settings.setValue("gotify_address", address);
+    emit gotifyAddressChanged(m_gotifyAddress);
+}
+
+void Backend::setGotifyPort(int port)
+{
+
+    m_gotifyPort = port;
+    QSettings settings;
+    qDebug() << "[log] new value for gotify port: " << port;
+    settings.setValue("gotify_port", port);
+    emit gotifyPortChanged(m_gotifyPort);
 }
 
 void Backend::startCommunications()

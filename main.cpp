@@ -1,6 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickStyle>
 
 #include <QLocale>
 #include <QTranslator>
@@ -12,7 +13,7 @@ int main(int argc, char *argv[])
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
-    qputenv("QT_QUICK_CONTROLS_STYLE", "material");
+    QQuickStyle::setStyle("Material");
     QCoreApplication::setOrganizationName("Sample");
     QCoreApplication::setOrganizationDomain("sample.com");
     QCoreApplication::setApplicationName("Protify");
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
     }
     else {
         qDebug() << "Couldn't load :/translations/Protify_" + locale.name() + ".qm";
-	}
+    }
 
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));

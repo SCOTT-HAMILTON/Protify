@@ -10,7 +10,6 @@
 #include "QtZeroConf/qzeroconf.h"
 #include <thread>
 #include <QStack>
-//#include <cds/container/treiber_stack.h>
 
 struct ConnectionArgs {
     const QString address;
@@ -41,13 +40,11 @@ private:
     QString m_name;
     QUuid m_uuid;
 
-//    cds::container::TreiberStack<cds::gc::HP, QString> sendDiedProcessNotifStack;
-    QMutex sendDiedProcessNotifStackMutex;
-    QStack<QString> sendDiedProcessNotifStack;
-
     void connectToService(const QZeroConfService s);
     void connectToService(const QString& address, int port);
     void server_loop(const ConnectionArgs& args);
+
+    static QString strip(const QString& str);
 };
 
 #endif // COMMUNICATIONMANAGER_H

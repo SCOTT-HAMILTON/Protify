@@ -1,8 +1,9 @@
-import QtQuick 2.12
-import QtQuick.Window 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.Material 2.12
-import QtQuick.Layouts 1.12
+import QtQml 2.15
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Controls.Material 2.15
+import QtQuick.Layouts 1.15
+import QtQuick.Window 2.15
 
 Window {
     id: root
@@ -89,55 +90,18 @@ Window {
                 sideDrawer.close()
             }
         }
-        ToolBar {
-            id: drawerToolBarHeader
-            z: 1
-            property var calculatedWidth: parent.width-backDrawerButton.width
-            width: calculatedWidth
-            anchors.left: backDrawerButton.right
-            Label {
-                anchors.centerIn: parent
-                text: qsTr("Followed Processes")
-            }
-        }
-        ToolBar {
-            id: configToolBarFooter
-            z: 1
-            property var calculatedWidth: parent.width-backDrawerButton.width
-            width: calculatedWidth
-            anchors.left: backDrawerButton.right
-            anchors.top: followedItems.bottom
-            Label {
-                anchors.centerIn: parent
-                text: qsTr("Hostname")
-            }
-        }
-        TextField {
-            id: hostnameField
-            width: parent.width*0.8
-            height: 60
-            placeholderText: qsTr("Hostname")
-            x: parent.width/2-width/2
-            y: configToolBarFooter.y+configToolBarFooter.height+
-               (parent.height-configToolBarFooter.y-
-                configToolBarFooter.height)/2-height/2
-            Component.onCompleted: {
-                text = backend.hostname
-            }
-
-            onTextChanged: {
-                backend.hostname = text
-            }
-        }
         ListView {
             id: followedItems
             width: parent.width
-            height: parent.height-drawerToolBarHeader.height
-                    -configToolBarFooter.height-hostnameField.height
+            property var calculatedHeight: parent.height-drawerToolBarHeader.height
+                    -hostnameField.height
                     -parent.height*0.1
             anchors.top: drawerToolBarHeader.bottom
             model: backend.followedItems
             clip: true
+            Component.onCompleted: {
+                height = calculatedHeight
+            }
             delegate: Row {
                 id: followedItemLayout
                 states: [
@@ -212,6 +176,139 @@ Window {
                         sourceSize.width: parent.height*0.5
                         x: parent.width
                         opacity: 0.9
+                    }
+                }
+            }
+        }
+        ToolBar {
+            id: drawerToolBarHeader
+            z: 1
+            property var calculatedWidth: parent.width-backDrawerButton.width
+            width: calculatedWidth
+            height: backDrawerButton.height
+            anchors.left: backDrawerButton.right
+            Label {
+                anchors.centerIn: parent
+                text: qsTr("Followed Processes")
+            }
+        }
+        TabBar {
+            id: configTabBar
+            width: parent.width
+            anchors.top: followedItems.bottom
+            TabButton {
+                text: qsTr("Hostname")
+            }
+            TabButton {
+                text: qsTr("Gotify")
+            }
+            state: (currentIndex == 0)?"host":"gotify"
+            states: [
+                State {
+                    name: "host"
+                    PropertyChanges {
+                        target: followedItems
+                        height: followedItems.calculatedHeight
+                    }
+                },
+                State {
+                    name: "gotify"
+                    PropertyChanges {
+                        target: followedItems
+                        height: followedItems.calculatedHeight-60
+                    }
+                }
+            ]
+            transitions: [
+                Transition {
+                    from: "host"
+                    to: "gotify"
+                    NumberAnimation {
+                        target: followedItems
+                        properties: "height"
+                        duration: 300
+                        easing.type: Easing.OutCirc
+                    }
+                },
+                Transition {
+                    from: "gotify"
+                    to: "host"
+                    NumberAnimation {
+                        target: followedItems
+                        properties: "height"
+                        duration: 300
+                        easing.type: Easing.InCirc
+                    }
+                }
+            ]
+        }
+        StackLayout {
+            currentIndex: configTabBar.currentIndex
+            Rectangle {
+                y: configTabBar.y+configTabBar.height
+                width: configTabBar.width
+                TextField {
+                    id: hostnameField
+                    width: sideDrawer.width*0.8
+                    height: 60
+                    x: sideDrawer.width/2-width/2
+                    placeholderText: qsTr("Hostname")
+                    Component.onCompleted: {
+                        text = backend.hostname
+                    }
+                    onTextChanged: {
+                        backend.hostname = text
+                    }
+                }
+            }
+            Rectangle {
+                y: configTabBar.y+configTabBar.height
+                width: configTabBar.width
+                ColumnLayout {
+                    anchors.fill: parent
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 60
+                        TextField {
+                            id: gotifyAddressField
+                            anchors.centerIn: parent
+                            width: sideDrawer.width*0.96
+                            placeholderText: qsTr("Address ex: http://mygotify.io")
+                            Component.onCompleted: {
+                                text = backend.gotifyAddress
+                            }
+                            onTextChanged: {
+                                backend.gotifyAddress = text
+                            }
+                        }
+                    }
+                    RowLayout {
+                        Layout.leftMargin: 10
+                        TextField {
+                            id: tokenField
+                            Layout.preferredHeight: 60
+                            Layout.fillWidth: true
+                            placeholderText: qsTr("Token")
+                            Component.onCompleted: {
+                                text = backend.token
+                            }
+                            onTextChanged: {
+                                backend.token = text
+                            }
+                        }
+                        SpinBox {
+                            id: portField
+                            height: 60
+                            from: 0
+                            to: 100000
+                            editable: true
+                            Component.onCompleted: {
+                                value = backend.gotifyPort
+                            }
+                            onValueChanged: {
+                                backend.gotifyPort = value
+                            }
+                        }
                     }
                 }
             }

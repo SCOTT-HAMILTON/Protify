@@ -1,6 +1,6 @@
-QT += quick network
+QT += quickcontrols2 network
 
-CONFIG += c++17 lrelease embed_translations
+CONFIG += c++17 lrelease embed_translations network
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.

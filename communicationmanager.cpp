@@ -5,12 +5,19 @@
 #include <QDataStream>
 #include <QSettings>
 #include <QJsonObject>
+#include <QNetworkAccessManager>
+#include <QUrl>
+#include <QNetworkRequest>
+#include <QHttpMultiPart>
+#include <QHttpPart>
+#include <QUrlQuery>
+#include <QNetworkReply>
 
 CommunicationManager::CommunicationManager(
         QObject *parent) :
     QObject(parent),
-    m_uuid(QUuid::createUuid()),
-    m_processus()
+    m_processus(),
+    m_uuid(QUuid::createUuid())
 {
     m_name = QSettings().value("hostname", "MY-PC").toString();
 }
@@ -66,7 +73,7 @@ void CommunicationManager::initializeConnection()
                  << "port: " << s->port();
     });
     QObject::connect(zeroConf, &QZeroConf::serviceUpdated,
-            [this](QZeroConfService s){
+            [](QZeroConfService s){
         qDebug() << "Service updated : "
                  << "name: " << s->name()
                  << "type: " << s->type()
@@ -74,18 +81,46 @@ void CommunicationManager::initializeConnection()
                  << "host: " << s->host()
                  << "ip: " << s->ip().toString()
                  << "port: " << s->port();
-//        connectToService(s);
     });
     zeroConf->startBrowser("_examplednssd._tcp");
-//    connectToService("192.168.1.19", 7777);
     qDebug() << "Started Browsing...";
 }
 void CommunicationManager::sendProcessDied(const QString& name) {
-    sendDiedProcessNotifStackMutex.lock();
-    qDebug() << "Process Stack size before: " << sendDiedProcessNotifStack.size();
-    sendDiedProcessNotifStack.push(name);
-    qDebug() << "Process Stack size after: " << sendDiedProcessNotifStack.size();
-    sendDiedProcessNotifStackMutex.unlock();
+    QSettings settings;
+    auto token = strip(settings.value("token", "XXXXXX").toString());
+    auto gotifyAddress = strip(settings.value("gotify_address", "http://127.0.0.1").toString());
+    auto gotifyPort = settings.value("gotify_port", 80).toInt();
+    qDebug() << "gotifyAddress: " << gotifyAddress;
+    QUrl url(gotifyAddress);
+    url.setPort(gotifyPort);
+    url.setPath("/message");
+    url.setQuery(QUrlQuery({QPair(QString("token"), token)}));
+    qDebug() << "[log] query url: " << url.toString();
+    auto manager = new QNetworkAccessManager(this);
+    auto request = new QHttpMultiPart(QHttpMultiPart::FormDataType, manager);
+    {
+        QHttpPart title, message, priority;
+        title.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("text/plain"));
+        title.setHeader(QNetworkRequest::ContentDispositionHeader,
+                        QVariant("form-data; name=\"title\""));
+        title.setBody("Protifydroid");
+        message.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("text/plain"));
+        message.setHeader(QNetworkRequest::ContentDispositionHeader,
+                        QVariant("form-data; name=\"message\""));
+        message.setBody(QString(tr("Process %1 finished running.")).arg(name).toUtf8());
+        priority.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("text/plain"));
+        priority.setHeader(QNetworkRequest::ContentDispositionHeader,
+                        QVariant("form-data; name=\"priority\""));
+        priority.setBody("5");
+        request->append(title);
+        request->append(message);
+        request->append(priority);
+    }
+    auto answer = manager->post(QNetworkRequest(url), request);
+    QObject::connect(answer, &QNetworkReply::errorOccurred, this, [](QNetworkReply::NetworkError e){
+        qDebug() << "[error] network error occured: " << e;
+    });
+    qDebug() << "[log] sent post request.";
 }
 
 void CommunicationManager::updateProcessus(const QStringList &processus)
@@ -123,15 +158,6 @@ void CommunicationManager::server_loop(const ConnectionArgs& args) {
     publisher.connect(server_address.toStdString());
     running.store(true);
     while(running.load()) {
-        qDebug() << "Process Stack size: " << sendDiedProcessNotifStack.size();
-        while (sendDiedProcessNotifStack.size() > 0) {
-            sendDiedProcessNotifStackMutex.lock();
-            auto process = sendDiedProcessNotifStack.pop();
-            sendDiedProcessNotifStackMutex.unlock();
-            QString message("notifdied="+process);
-            qDebug() << "Publisher sent message: " << message;
-            publisher.send(message.toStdString().c_str(), message.size());
-        }
         QJsonObject object({
             QPair("alive", QJsonValue(true)),
             QPair("name", QJsonValue(m_name)),
@@ -141,10 +167,17 @@ void CommunicationManager::server_loop(const ConnectionArgs& args) {
         qDebug() << "Sending processus: " << m_processus;
         QJsonDocument jsonDoc(object);
         QString jsonMessage = jsonDoc.toJson(QJsonDocument::Compact);
-        publisher.send(jsonMessage.toStdString().c_str(), jsonMessage.size());
+        zmq::const_buffer buffer = zmq::buffer(jsonMessage.toStdString());
+        publisher.send(buffer);
         zmq_sleep(2);
     }
     publisher.close();
     ctx.close();
 }
 
+QString CommunicationManager::strip(const QString &str)
+{
+    auto stdStr = str.toStdString();
+    stdStr.erase(std::remove(stdStr.begin(), stdStr.end(), '\n'), stdStr.end());
+    return QString::fromStdString(stdStr);
+}
