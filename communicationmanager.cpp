@@ -85,7 +85,8 @@ void CommunicationManager::initializeConnection()
     zeroConf->startBrowser("_examplednssd._tcp");
     qDebug() << "Started Browsing...";
 }
-void CommunicationManager::sendProcessDied(const QString& name) {
+
+void CommunicationManager::sendMessage(const QString& strmessage) {
     QSettings settings;
     auto token = strip(settings.value("token", "XXXXXX").toString());
     auto gotifyAddress = strip(settings.value("gotify_address", "http://127.0.0.1").toString());
@@ -97,8 +98,8 @@ void CommunicationManager::sendProcessDied(const QString& name) {
 #if QT_VERSION < QT_VERSION_CHECK(5, 13, 0)
     {
         QUrlQuery query;
-		query.addQueryItem(QString("token"), token);
-		url.setQuery(query);
+        query.addQueryItem(QString("token"), token);
+        url.setQuery(query);
     }
 #else
     url.setQuery(QUrlQuery({QPair(QString("token"), token)}));
@@ -115,7 +116,7 @@ void CommunicationManager::sendProcessDied(const QString& name) {
         message.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("text/plain"));
         message.setHeader(QNetworkRequest::ContentDispositionHeader,
                         QVariant("form-data; name=\"message\""));
-        message.setBody(QString(tr("Process %1 finished running.")).arg(name).toUtf8());
+        message.setBody(strmessage.toUtf8());
         priority.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("text/plain"));
         priority.setHeader(QNetworkRequest::ContentDispositionHeader,
                         QVariant("form-data; name=\"priority\""));
@@ -135,6 +136,15 @@ void CommunicationManager::sendProcessDied(const QString& name) {
     });
 #endif
     qDebug() << "[log] sent post request.";
+}
+
+void CommunicationManager::sendProcessDied(const QString& name) {
+    auto message = QString(tr("Process %1 finished running.")).arg(name);
+    sendMessage(message);
+}
+
+void CommunicationManager::sendPing() {
+    sendMessage("Ping");
 }
 
 void CommunicationManager::updateProcessus(const QStringList &processus)
@@ -176,9 +186,9 @@ void CommunicationManager::server_loop(const ConnectionArgs& args) {
             QPair<QString,QJsonValue>("alive", QJsonValue(true)),
             QPair<QString,QJsonValue>("name", QJsonValue(m_name)),
             QPair<QString,QJsonValue>("processus",
-					QJsonValue(QJsonArray::fromStringList(m_processus))),
+                    QJsonValue(QJsonArray::fromStringList(m_processus))),
             QPair<QString,QJsonValue>("uuid",
-					QJsonValue(m_uuid.toString(QUuid::StringFormat::WithoutBraces)))
+                    QJsonValue(m_uuid.toString(QUuid::StringFormat::WithoutBraces)))
         });
         qDebug() << "Sending processus: " << m_processus;
         QJsonDocument jsonDoc(object);

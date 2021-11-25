@@ -330,5 +330,15 @@ Window {
         onClicked: {
             backend.updateSearchResults()
         }
+	}
+    RoundButton {
+        width: root.width*0.1
+        height: width
+        x: root.width-width-root.width*0.03
+        y: root.height-height-root.width*0.03
+        icon.source: "qrc:/icons/notification-bell.svg"
+        onClicked: {
+            backend.pingDevices()
+        }
     }
 }

@@ -49,6 +49,7 @@ public slots:
     void removeFollowedItem(int pid);
     void onProcessDied(int pid);
     void sendProcessus();
+    void pingDevices();
 
 private:
     QQmlObjectListModel<ProcessItem> m_searchResults;

@@ -30,6 +30,7 @@ signals:
 
 public slots:
     void sendProcessDied(const QString& name);
+    void sendPing();
     void updateProcessus(const QStringList& processus);
     void changeName(const QString& newName);
 
@@ -44,6 +45,7 @@ private:
     void connectToService(const QString& address, int port);
     void server_loop(const ConnectionArgs& args);
 
+    void sendMessage(const QString& name);
     static QString strip(const QString& str);
 };
 

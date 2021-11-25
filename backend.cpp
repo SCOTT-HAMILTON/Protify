@@ -220,3 +220,7 @@ void Backend::sendProcessus() {
                    [](const ProcessItem* it) -> QString { return it->name(); });
     communicationManager->updateProcessus(QStringList(processus));
 }
+void Backend::pingDevices() {
+    qDebug() << "Pinging devices";
+    communicationManager->sendPing();
+}

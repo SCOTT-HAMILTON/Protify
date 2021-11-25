@@ -7,12 +7,12 @@ CONFIG += c++17 lrelease embed_translations network
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-		backend.cpp \
-		communicationmanager.cpp \
-		followedprocessitem.cpp \
-		main.cpp \
-		processitem.cpp \
-		processlister.cpp
+	backend.cpp \
+	communicationmanager.cpp \
+	followedprocessitem.cpp \
+	main.cpp \
+	processitem.cpp \
+	processlister.cpp
 
 HEADERS += \
 	backend.h \
