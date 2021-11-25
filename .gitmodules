@@ -6,10 +6,9 @@
 	path = libxprocs
 	url = https://github.com/SCOTT-HAMILTON/libxprocs
 
-[submodule "qt-qml-models"]
-	path = qt-qml-models
-	url = http://gitlab.unique-conception.org/qt-qml-tricks/qt-qml-models
-
 [submodule "QtZeroConf"]
 	path = QtZeroConf
 	url = https://github.com/SCOTT-HAMILTON/QtZeroConf
+[submodule "qt-qml-models"]
+	path = qt-qml-models
+	url = https://github.com/nickdiego/qt-qml-models
